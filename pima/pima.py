@@ -11,7 +11,7 @@ columns = [
 ]
 
 # Load the CSV (no header row in this file)
-data = pd.read_csv("diabetes.csv", header=None, names=columns)
+data = pd.read_csv("pima.csv", header=None, names=columns)
 
 # Separate input features and target
 X = data.drop("Outcome", axis=1)

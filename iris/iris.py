@@ -3,47 +3,90 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.svm import SVC
 
-# Load the CSV
+# 1. Load dataset
 data = pd.read_csv("Iris.csv")
 
-# Use two features so we can plot the boundary
+# 2. Select two features
 X = data[["SepalLengthCm", "PetalLengthCm"]].values
 
-# Setosa = 1, other species = 0
+# 3. Convert into binary classification
 y = (data["Species"] == "Iris-setosa").astype(int)
 
-# Train linear SVM
+# 4. Create and train Linear SVM
 model = SVC(kernel="linear", C=1)
 model.fit(X, y)
 
-# Create a grid for plotting
-x_min, x_max = X[:, 0].min() - 0.5, X[:, 0].max() + 0.5
-y_min, y_max = X[:, 1].min() - 0.5, X[:, 1].max() + 0.5
+# 5. Create grid for decision boundary
+x1, x2 = X[:, 0].min()-1, X[:, 0].max()+1
+y1, y2 = X[:, 1].min()-1, X[:, 1].max()+1
+
 xx, yy = np.meshgrid(
-    np.arange(x_min, x_max, 0.02),
-    np.arange(y_min, y_max, 0.02)
+    np.linspace(x1, x2, 100),
+    np.linspace(y1, y2, 100)
 )
 
-# Get model scores across the grid
 grid = np.c_[xx.ravel(), yy.ravel()]
-scores = model.decision_function(grid).reshape(xx.shape)
 
-# Plot decision regions, boundary, and margins
-plt.contourf(xx, yy, scores > 0, alpha=0.2, cmap="coolwarm")
+# 6. Predict grid points
+Z = model.predict(grid).reshape(xx.shape)
+
+# 7. Plot decision regions
+plt.contourf(xx, yy, Z, alpha=0.3, cmap="coolwarm")
+
+# 8. Plot decision boundary and margins
+scores = model.decision_function(grid).reshape(xx.shape)
 plt.contour(xx, yy, scores, levels=[-1, 0, 1],
             colors=["black", "red", "black"])
 
-# Plot flowers and support vectors
-plt.scatter(X[:, 0], X[:, 1], c=y, cmap="coolwarm", edgecolors="black")
-plt.scatter(
-    model.support_vectors_[:, 0],
-    model.support_vectors_[:, 1],
-    s=120, facecolors="none", edgecolors="green",
-    label="Support vectors"
-)
+# 9. Plot data points
+plt.scatter(X[:, 0], X[:, 1], c=y, cmap="coolwarm",
+            edgecolors="black")
 
-plt.xlabel("Sepal length (cm)")
-plt.ylabel("Petal length (cm)")
-plt.title("Linear SVM: Setosa vs. Non-Setosa")
+# 10. Highlight support vectors
+plt.scatter(model.support_vectors_[:, 0],
+            model.support_vectors_[:, 1],
+            s=120, facecolors="none", edgecolors="green",
+            label="Support Vectors")
+
+plt.xlabel("Sepal Length")
+plt.ylabel("Petal Length")
+plt.title("Linear SVM - Iris Classification")
 plt.legend()
 plt.show()
+
+
+"""
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.svm import SVC
+
+data = pd.read_csv("Iris.csv")
+X = data[["SepalLengthCm", "PetalLengthCm"]].values
+y = (data["Species"] == "Iris-setosa").astype(int)
+model = SVC(kernel="linear", C=1)
+model.fit(X, y)
+x1, x2 = X[:, 0].min()-1, X[:, 0].max()+1
+y1, y2 = X[:, 1].min()-1, X[:, 1].max()+1
+xx, yy = np.meshgrid(
+    np.linspace(x1, x2, 100),
+    np.linspace(y1, y2, 100)
+)
+grid = np.c_[xx.ravel(), yy.ravel()]
+Z = model.predict(grid).reshape(xx.shape)
+plt.contourf(xx, yy, Z, alpha=0.3, cmap="coolwarm")
+scores = model.decision_function(grid).reshape(xx.shape)
+plt.contour(xx, yy, scores, levels=[-1, 0, 1],
+            colors=["black", "red", "black"])
+plt.scatter(X[:, 0], X[:, 1], c=y, cmap="coolwarm",
+            edgecolors="black")
+plt.scatter(model.support_vectors_[:, 0],
+            model.support_vectors_[:, 1],
+            s=120, facecolors="none", edgecolors="green",
+            label="Support Vectors")
+plt.xlabel("Sepal Length")
+plt.ylabel("Petal Length")
+plt.title("Linear SVM - Iris Classification")
+plt.legend()
+plt.show()
+"""
