@@ -4,47 +4,43 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans, AgglomerativeClustering
 from sklearn.metrics import silhouette_score
 
-# Load the CSV
+# Load dataset
 data = pd.read_csv("Mall_Customers.csv")
-
-# Use age, income, and spending score
+# Select features
 X = data[["Age", "Annual Income (k$)", "Spending Score (1-100)"]]
-
-# Scale the features so they are comparable
-X_scaled = StandardScaler().fit_transform(X)
+# Scale the data
+X = StandardScaler().fit_transform(X)
 
 # K-means clustering
 kmeans = KMeans(n_clusters=5, random_state=42, n_init=10)
-kmeans_labels = kmeans.fit_predict(X_scaled)
+kmeans_labels = kmeans.fit_predict(X)
 
-# Hierarchical agglomerative clustering
-hierarchical = AgglomerativeClustering(n_clusters=5, linkage="ward")
-hierarchical_labels = hierarchical.fit_predict(X_scaled)
+# Hierarchical clustering
+hc = AgglomerativeClustering(n_clusters=5, linkage="ward")
+hc_labels = hc.fit_predict(X)
 
-# Compare clustering metrics
+# Evaluation
 print("K-means")
 print("Inertia:", kmeans.inertia_)
-print("Silhouette score:", silhouette_score(X_scaled, kmeans_labels))
+print("Silhouette Score:", silhouette_score(X, kmeans_labels))
 
-print("\nHierarchical clustering")
-print("Silhouette score:", silhouette_score(X_scaled, hierarchical_labels))
+print("\nHierarchical Clustering")
+print("Silhouette Score:", silhouette_score(X, hc_labels))
 
-# Plot clusters using income and spending score
+# Visualization
 plt.figure(figsize=(12, 5))
 
 plt.subplot(1, 2, 1)
-plt.scatter(data["Annual Income (k$)"], data["Spending Score (1-100)"],
-            c=kmeans_labels, cmap="viridis")
-plt.title("K-means")
-plt.xlabel("Annual income (k$)")
-plt.ylabel("Spending score")
+plt.scatter(data["Annual Income (k$)"],
+            data["Spending Score (1-100)"], c=kmeans_labels)
+plt.title("K-means Clustering")
+plt.xlabel("Annual Income")
+plt.ylabel("Spending Score")
 
 plt.subplot(1, 2, 2)
-plt.scatter(data["Annual Income (k$)"], data["Spending Score (1-100)"],
-            c=hierarchical_labels, cmap="viridis")
-plt.title("Agglomerative clustering")
-plt.xlabel("Annual income (k$)")
-plt.ylabel("Spending score")
-
-plt.tight_layout()
+plt.scatter(data["Annual Income (k$)"],
+            data["Spending Score (1-100)"], c=hc_labels)
+plt.title("Hierarchical Clustering")
+plt.xlabel("Annual Income")
+plt.ylabel("Spending Score")
 plt.show()
