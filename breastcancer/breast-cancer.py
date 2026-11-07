@@ -1,57 +1,86 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import make_pipeline
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 
-# 1. Load and preprocess
+# Load data
 data = pd.read_csv("breast-cancer.csv")
+data = data.drop(["id", "Unnamed: 32"], axis=1)
 
-# Remove ID column if present
-if "id" in data.columns:
-    data = data.drop("id", axis=1)
+# X and y
+X = data.drop("diagnosis", axis=1)
+y = data["diagnosis"].map({"B": 0, "M": 1})
 
-# Remove rows with missing values
-data = data.dropna()
-
-# Features and diagnosis
-X = data.drop("Diagnosis", axis=1)
-y = data["Diagnosis"].map({"B": 0, "M": 1})
-
-# Split data for fair comparison
+# Split
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42, stratify=y
+    X, y, test_size=0.2, random_state=42
 )
 
-# 2. MLE: logistic regression without regularization
-mle = make_pipeline(
-    StandardScaler(),
-    LogisticRegression(penalty=None, max_iter=5000)
+# Scaling
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# MLE
+mle = LogisticRegression(penalty=None, max_iter=5000)
+
+# MAP L2
+l2 = LogisticRegression(penalty="l2")
+
+# MAP L1
+l1 = LogisticRegression(penalty="l1", solver="liblinear")
+
+# Train and compare
+for name, model in [("MLE", mle), ("L2", l2), ("L1", l1)]:
+    model.fit(X_train, y_train)
+    pred = model.predict(X_test)
+    print(name, accuracy_score(y_test, pred))
+    print("Coefficients:", model.coef_[0][:5])
+
+
+"""
+import pandas as pd
+import sklearn
+from packaging.version import Version
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+
+# Load data
+data = pd.read_csv("breast-cancer.csv")
+data = data.drop(["id", "Unnamed: 32"], axis=1, errors="ignore")
+
+# X and y
+X = data.drop("diagnosis", axis=1)
+y = data["diagnosis"].map({"B": 0, "M": 1})
+
+# Split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
 )
-mle.fit(X_train, y_train)
 
-# 3. MAP with L2 regularization
-l2 = make_pipeline(
-    StandardScaler(),
-    LogisticRegression(penalty="l2", C=1.0, max_iter=5000)
-)
-l2.fit(X_train, y_train)
+# Scaling
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
 
-# 4. MAP with L1 regularization
-l1 = make_pipeline(
-    StandardScaler(),
-    LogisticRegression(penalty="l1", solver="liblinear", C=1.0, max_iter=5000)
-)
-l1.fit(X_train, y_train)
+# Models: adapt to sklearn version
+if Version(sklearn.__version__) >= Version("1.8"):
+    mle = LogisticRegression(C=float("inf"), max_iter=5000)
+    l2 = LogisticRegression(l1_ratio=0, max_iter=5000)
+    l1 = LogisticRegression(l1_ratio=1, solver="liblinear", max_iter=5000)
+else:
+    mle = LogisticRegression(penalty="none", max_iter=5000)
+    l2 = LogisticRegression(penalty="l2", max_iter=5000)
+    l1 = LogisticRegression(penalty="l1", solver="liblinear", max_iter=5000)
 
-# 5. Compare performance
-for name, model in [("MLE", mle), ("MAP L2", l2), ("MAP L1", l1)]:
-    prediction = model.predict(X_test)
-    print(name, "accuracy:", accuracy_score(y_test, prediction))
+# Train and compare
+for name, model in [("MLE", mle), ("L2", l2), ("L1", l1)]:
+    model.fit(X_train, y_train)
+    pred = model.predict(X_test)
 
-# 6. Compare parameter estimates (coefficients)
-print("\nCoefficient comparison:")
-print("MLE:   ", mle[-1].coef_[0][:5])
-print("MAP L2:", l2[-1].coef_[0][:5])
-print("MAP L1:", l1[-1].coef_[0][:5])
+    print(name, accuracy_score(y_test, pred))
+    print("Coefficients:", model.coef_[0][:5])
+"""

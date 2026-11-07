@@ -2,31 +2,33 @@ import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 
-# Load the CSV from the same folder as this Python file
+# 1. Load dataset
 data = pd.read_csv("train_preprocessed.csv")
-documents = data["raw_text"].fillna("").astype(str)
+documents = data["raw_text"].fillna("")
 
-# Convert documents into word counts
+# 2. Convert text into word counts
 vectorizer = CountVectorizer(max_features=1000)
-word_counts = vectorizer.fit_transform(documents)
+X = vectorizer.fit_transform(documents)
 
-# Count each word across all documents
-counts = np.asarray(word_counts.sum(axis=0)).ravel()
+counts = np.asarray(X.sum(axis=0)).ravel()
 words = vectorizer.get_feature_names_out()
-total = counts.sum()
-vocab_size = len(words)
 
-# MLE: word count divided by total word count
+total = counts.sum()
+V = len(words)
+
+# 3. MLE estimation
 mle = counts / total
 
-# MAP with two Dirichlet prior values
-top_words = np.argsort(counts)[-5:][::-1]
+# 4. MAP estimation with different Dirichlet priors
+top = np.argsort(counts)[-5:][::-1]
 
-for alpha in [0.1, 1.0]:
-    map_estimate = (counts + alpha) / (total + alpha * vocab_size)
+for alpha in [1.1, 2, 10]:
 
-    print("\nPrior alpha:", alpha)
+    map_estimate = (counts + alpha - 1) / (total + V * (alpha - 1))
+
+    print("\nAlpha =", alpha)
     print("Word       MLE       MAP")
 
-    for i in top_words:
+    for i in top:
         print(f"{words[i]:10s} {mle[i]:.6f}  {map_estimate[i]:.6f}")
+
