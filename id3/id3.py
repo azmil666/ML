@@ -48,13 +48,10 @@ model.fit(X_train, y_train)
 y_pred = model.predict(X_test)
 print("Accuracy:", accuracy_score(y_test, y_pred))
 
-# 10. Feature importance
-print("Feature Importance:")
-for name, value in zip(X.columns, model.feature_importances_):
-    print(name, ":", round(value, 3))
+# Feature importance
+print(model.feature_importances_)
 
-# 11. Visualize tree
+# Visualize tree
 plt.figure(figsize=(12, 6))
-plot_tree(model, feature_names=X.columns,
-          class_names=model.classes_, filled=True)
+plot_tree(model, filled=True)
 plt.show()
